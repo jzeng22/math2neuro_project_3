@@ -97,12 +97,11 @@ for electrode in range(1, 10):
     N100_patients_2.append(abs(min(ERP)))
     P200_patients_2.append(abs(max(ERP)))
     
-# peak amplitude comparison between controls and patients 
+# peak amplitude differences between controls and patients 
 N100_CvsP_1 = list(map(sub, N100_controls_1, N100_patients_1))
 N100_CvsP_2 = list(map(sub, N100_controls_2, N100_patients_2))
 P200_CvsP_1 = list(map(sub, P200_controls_1, P200_patients_1))
 P200_CvsP_2 = list(map(sub, P200_controls_2, P200_patients_2))
-
 
 # changes in N100 and P200 between conditions 1 and 2 (negative #s indicate suppresion in condition 1, positive #s indicate increase in condition 1)
 N100_controls_1vs2 = list(map(sub, N100_controls_1, N100_controls_2))
