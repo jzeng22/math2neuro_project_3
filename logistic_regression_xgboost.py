@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd 
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold
@@ -35,7 +36,6 @@ def patient_ERP(patient, electrode, condition):
             
     return patient_ERP
 
-# feature extraction
 """
 N100_1_C = []
 N100_1_P = []
@@ -73,7 +73,8 @@ N100_suppression = []
 for i in range(0, 81):
     N100_suppression.append(abs(min(patient_ERP(i, 1, 2))) - abs(min(patient_ERP(i, 1, 1))))
 """
-"""
+
+# boxplot of N100 suppression in electrode 1 for controls vs. patients 
 N100_suppression_C = []
 N100_suppression_P = []
 for patient in range(0, 81):
@@ -83,16 +84,18 @@ for patient in range(0, 81):
         N100_suppression_P.append(abs(min(patient_ERP(patient, 1, 2))) - abs(min(patient_ERP(patient, 1, 1))))
 
 plt.boxplot([N100_suppression_C, N100_suppression_P])
-"""
+plt.xticks(ticks = [1, 2], labels = ['Controls', 'Patients'])
+plt.title('N100 Suppression in Electrode 1')
 
+# feature extraction
 x = []
 for patient in range(0, 81):
     patient_x = []
     for electrode in range(1, 10):
         patient_x.append(min(patient_ERP(patient, electrode, 1))) # N100 peak amplitude in condtion 1
         patient_x.append(min(patient_ERP(patient, electrode, 2))) # N100 peak amplitude in condtion 2
-        # patient_x.append(max(patient_ERP(patient, electrode, 1))) # P200 peak amplitude in condtion 1
-        # patient_x.append(max(patient_ERP(patient, electrode, 2))) # P200 peak amplitude in condtion 2
+        patient_x.append(max(patient_ERP(patient, electrode, 1))) # P200 peak amplitude in condtion 1
+        patient_x.append(max(patient_ERP(patient, electrode, 2))) # P200 peak amplitude in condtion 2
         patient_x.append(abs(min(patient_ERP(patient, electrode, 2))) - abs(min(patient_ERP(patient, electrode, 1)))) # N100 suppresion in condition 1 compared to condition 2
     x.append(patient_x)
 
@@ -105,12 +108,23 @@ x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.3)
 # logistic regression model
 lr_model = LogisticRegression(max_iter = 200, penalty = 'l2')
 cv = KFold(n_splits = 10, random_state = 1, shuffle = True)
-scores = cross_val_score(lr_model, x, y, scoring = 'accuracy', cv = cv, n_jobs = -1)
-print('Logistic Regression Model Accuracy on Test Data: %.3f' % np.mean(scores))
+lr_scores = cross_val_score(lr_model, x, y, scoring = 'accuracy', cv = cv)
+print('Logistic Regression Model Accuracy on Test Data: %.3f' % np.mean(lr_scores))
 
 lr_model.fit(x_train, y_train)
 print('Logistic Regression Model Accuracy on Training Data: %.3f' % lr_model.score(x_train, y_train))
 
+# xgboost model 
+params = {'colsample_bytree':0.3, 'max_depth':3, 'subsample':0.5, 'gamma':5, 'eta':0.1}
+xgb_model = xgb.XGBClassifier(**params)
+xgb_scores = cross_val_score(xgb_model, x, y, scoring = 'accuracy', cv = cv)
+print('XGBoost Model Accuracy on Test Data: %.3f' % np.mean(xgb_scores))
+
+xgb_model.fit(x_train, y_train)
+print('XGBoost Model Accuracy on Training Data: %.3f' % xgb_model.score(x_train, y_train))
+
+
+"""
 # xgboost model
 x_df = pd.DataFrame(x)
 y_df = pd.DataFrame(y)
@@ -120,19 +134,7 @@ params = {'objective':'binary:logistic', 'colsample_bytree':0.3, 'max_depth':5, 
 xgb_cv = xgb.cv(dtrain = dtrain, params = params, nfold = 10, num_boost_round = 50, early_stopping_rounds = 10, metrics = "auc", as_pandas = True, seed = 123)
 print('XGBoost AUC on Test Data: %.3f' % xgb_cv.iloc[0, 0])
 print('XGBoost AUC on Training Data: %.3f' % xgb_cv.iloc[0, 2])
-
 """
-xgb_model = XGBClassifier()
-xgb_model.fit(x_train, y_train)
-print('XGBoost Model Accuracy on Training Data: %.3f' % xgb_model.score(x_train, y_train))
-"""
-"""
-predictions = xgb_model.predict(x_test)
-print('XGBoost Model Accuracy: {0:0.4f}'.format(accuracy_score(y_test, predictions)))
-predictions_train = xgb_model.predict(x_train)
-print(accuracy_score(y_train, predictions_train))
-"""
-
 
 
 
