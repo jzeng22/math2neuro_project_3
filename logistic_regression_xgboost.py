@@ -5,10 +5,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score
+# from sklearn.metrics import accuracy_score
 from xgboost import XGBClassifier
 import xgboost as xgb
-from xgboost import cv
+# from xgboost import cv
 
 demographic = pd.read_csv(r'/Users/jennycinno/Documents/GitHub/math2neuro_project_3/demographic.csv')
 ERPdata = pd.read_csv(r'/Users/jennycinno/Documents/GitHub/math2neuro_project_3/ERPdata.csv')
@@ -103,7 +103,7 @@ y = []
 for patient in range(0, 81):
     y.append(demographic.iloc[patient, 1])
     
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.3)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size = 0.2)
 
 # logistic regression model
 lr_model = LogisticRegression(max_iter = 200, penalty = 'l2')
@@ -116,25 +116,12 @@ print('Logistic Regression Model Accuracy on Training Data: %.3f' % lr_model.sco
 
 # xgboost model 
 params = {'colsample_bytree':0.3, 'max_depth':3, 'subsample':0.5, 'gamma':5, 'eta':0.1}
-xgb_model = xgb.XGBClassifier(**params)
+xgb_model = XGBClassifier(**params)
 xgb_scores = cross_val_score(xgb_model, x, y, scoring = 'accuracy', cv = cv)
 print('XGBoost Model Accuracy on Test Data: %.3f' % np.mean(xgb_scores))
 
 xgb_model.fit(x_train, y_train)
 print('XGBoost Model Accuracy on Training Data: %.3f' % xgb_model.score(x_train, y_train))
-
-
-"""
-# xgboost model
-x_df = pd.DataFrame(x)
-y_df = pd.DataFrame(y)
-dtrain = xgb.DMatrix(data = x, label = y)
-
-params = {'objective':'binary:logistic', 'colsample_bytree':0.3, 'max_depth':5, 'alpha':10, 'learning_rate':0.1}
-xgb_cv = xgb.cv(dtrain = dtrain, params = params, nfold = 10, num_boost_round = 50, early_stopping_rounds = 10, metrics = "auc", as_pandas = True, seed = 123)
-print('XGBoost AUC on Test Data: %.3f' % xgb_cv.iloc[0, 0])
-print('XGBoost AUC on Training Data: %.3f' % xgb_cv.iloc[0, 2])
-"""
 
 
 
